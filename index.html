@@ -120,6 +120,23 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 @media(prefers-reduced-motion:no-preference){.planet::after{animation:orbit 6s ease-in-out infinite alternate}}
 @keyframes orbit{from{transform:rotate(-18deg)}to{transform:rotate(-8deg)}}
+#player{display:none;position:fixed;inset:0;z-index:40;background:#000d;place-items:center;padding:12px}
+#player.on{display:grid}
+#player .game-frame{width:min(960px,100%);margin:0}
+#more{display:block;margin:28px auto 0}
+@media(max-width:860px){
+  #player{padding:0;place-items:stretch}
+  #player .game-frame{
+    width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column;
+    padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);
+    clip-path:none;border:0
+  }
+  #player .game-frame h2{margin:8px 12px;font-size:14px}
+  #player .game-frame iframe{flex:1;min-height:0;height:auto;max-width:none;aspect-ratio:auto}
+  #player .bar-btns{display:flex;gap:8px;margin:8px 12px}
+  #player .bar-btns .btn{flex:1;margin:0!important;padding:11px 10px}
+}
+@media(max-height:500px){#player .game-frame h2{display:none}}
 </style>
 </head>
 <body>
@@ -150,7 +167,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   class="btn"
   href="https://solace-no-city-sleeps-clean.netlify.app/"
   target="_blank"
-  rel="nooperner noreferrer"
+  rel="noopener noreferrer"
   style="display:inline-block;margin:28px 0 36px;text-decoration:none">
   JOGAR SOLACY NO CITY
     </a>
@@ -158,7 +175,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   class="btn"
   href="https://www.google.com/logos/2010/pacman10-i.html"
   target="_blank"
-  rel="nooperner noreferrer"
+  rel="noopener noreferrer"
   style="display:inline-block;margin:28px 0 36px;text-decoration:none">
   PACK MAN
     </a>
@@ -166,7 +183,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   class="btn"
   href="https://www.google.com/fbx?fbx=block_breaker"
   target="_blank"
-  rel="nooperner noreferrer"
+  rel="noopener noreferrer"
   onclick="window.open(this.href, 'gameWindow', 'fullscreen=yes,scrollbars=no,resizable=no'); return false;"
   style="display:inline-block;margin:28px 0 36px;text-decoration:none">
   BLOCK BREAKER
@@ -175,7 +192,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   class="btn"
   href="https://www.google.com/fbx?fbx=snake_arcade"
   target="_blank"
-  rel="nooperner noreferrer"
+  rel="noopener noreferrer"
   style="display:inline-block;margin:28px 0 36px;text-decoration:none">
   Snack
     </a>
@@ -183,7 +200,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   class="btn"
   href="https://www.google.com/logos/2018/gnomes/gnomes18.html"
   target="_blank"
-  rel="nooperner noreferrer"
+  rel="noopener noreferrer"
   style="display:inline-block;margin:28px 0 36px;text-decoration:none">
   ANÕES DE JARDIM
     </a>
@@ -191,7 +208,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   class="btn"
   href="https://poki.com/br/g/subway-surfers"
   target="_blank"
-  rel="nooperner noreferrer"
+  rel="noopener noreferrer"
   onclick="window.open(this.href, 'gameWindow', 'fullscreen=yes,scrollbars=no,resizable=no'); return false;"
   style="display:inline-block;margin:28px 0 36px;text-decoration:none">
   SUBWAY SURF
@@ -202,6 +219,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
     </div>
     <div class="sec"><h2 id="allTitle">TODOS OS JOGOS</h2><span id="count"></span></div>
     <div class="grid" id="grid"></div>
+    <button class="btn" id="more">CARREGAR MAIS JOGOS</button>
     <div class="promo">
       <div><h2>Tem um jogo para o Jogae?</h2><p>Em breve você poderá enviar seu jogo e aparecer aqui.</p></div>
       <button class="btn" data-msg="Avisaremos quando abrir!">QUERO PARTICIPAR</button>
@@ -209,20 +227,45 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   </main>
 </div>
 <footer><div class="wrap"><span>© 2026 Jogae. Todos os direitos reservados.</span><span>Jogos para todas as idades.</span></div></footer>
+
+<div id="player"><div class="game-frame">
+  <h2 id="pt"></h2>
+  <iframe id="pf" allowfullscreen allow="fullscreen; gamepad; autoplay"></iframe>
+  <div class="bar-btns" style="display:flex;gap:10px;margin-top:10px">
+    <button class="btn alt" id="pfs">TELA CHEIA</button>
+    <button class="btn alt" id="pc">FECHAR</button>
+  </div>
+</div></div>
+
 <div class="toast" id="toast" role="status"></div>
 
 <script>
-/* ====== EDITE AQUI ======
-   Troque a lista quando os jogos estiverem definidos.
-   Campos: t = título, c = categoria, img = URL da capa (opcional), url = link do jogo (opcional). */
 const CATS=[["Ação","💥"],["Aventura","🧭"],["Corrida","🏎️"],["Esportes","⚽"],["Puzzle","🧩"],["Estratégia","♟️"],["Meninas","👗"],["Multiplayer","👥"],["Infantil","🧸"]];
-const GAMES=Array.from({length:30},(_,i)=>({t:"Jogo "+String(i+1).padStart(2,"0"),c:CATS[(i*5)%CATS.length][0]}));
-/* ======================== */
 
 const $=s=>document.querySelector(s);
+const GAMES=[];
+const FEED=p=>`https://gamemonetize.com/feed.php?format=0&num=100&page=${p}`;
+const MAP={action:"Ação",shoot:"Ação",fight:"Ação",adventure:"Aventura",rac:"Corrida",driv:"Corrida",car:"Corrida",sport:"Esportes",soccer:"Esportes",puzzle:"Puzzle",strateg:"Estratégia",girl:"Meninas",dress:"Meninas",multi:"Multiplayer",kid:"Infantil"};
+const norm=c=>{const k=String(c||"").toLowerCase();for(const m in MAP)if(k.includes(m))return MAP[m];return "Ação"};
 const emoji=Object.fromEntries(CATS);
-let cat="Todos", term="";
-GAMES.forEach((g,i)=>{g.h=(i*47+215)%360});
+let cat="Todos", term="", page=0, loading=false;
+
+async function loadMore(){
+  if(loading)return; loading=true; $("#more").textContent="CARREGANDO...";
+  try{
+    const r=await fetch(FEED(++page)); const d=await r.json();
+    d.forEach(x=>GAMES.push({t:x.title,c:norm(x.category),img:x.thumb,embed:x.url,h:(GAMES.length*47+215)%360}));
+    render();
+  }catch(e){toast("Não foi possível carregar os jogos agora.")}
+  loading=false; $("#more").textContent="CARREGAR MAIS JOGOS";
+}
+function openGame(g){
+  $("#pt").textContent=g.t; $("#pf").src=g.embed;
+  $("#player").classList.add("on"); document.body.style.overflow="hidden";
+}
+function closeGame(){
+  $("#player").classList.remove("on"); $("#pf").src="about:blank"; document.body.style.overflow="";
+}
 
 function tile(g,big){
   const b=document.createElement("button");
@@ -231,14 +274,14 @@ function tile(g,big){
   b.innerHTML=(g.badge?`<span class="badge ${g.badge==="TOP"?"top":""}">${g.badge}</span>`:"")+
     (g.img?`<img src="${g.img}" alt="" loading="lazy">`:`<span class="emo" aria-hidden="true">${emoji[g.c]||"🎮"}</span>`)+
     `<span class="ttl">${g.t}<small>${g.c}</small></span>`;
-  b.onclick=()=>g.url?location.href=g.url:toast("“"+g.t+"” ainda vai chegar. Volte em breve!");
+  b.onclick=()=>g.embed?openGame(g):g.url?location.href=g.url:toast("“"+g.t+"” ainda vai chegar. Volte em breve!");
   return b;
 }
 function fill(el,list,firstBig){el.innerHTML="";list.forEach((g,i)=>el.appendChild(tile(g,firstBig&&i===0)))}
 function render(){
   const list=GAMES.filter(g=>(cat==="Todos"||g.c===cat)&&g.t.toLowerCase().includes(term.toLowerCase()));
   const home=cat==="Todos"&&!term;
-  $("#newSec").hidden=!home; $("#hero").hidden=!home;
+  $("#newSec").hidden=!home||!GAMES.length; $("#hero").hidden=!home;
   $("#allTitle").textContent=home?"TODOS OS JOGOS":(term?"RESULTADOS DA BUSCA":cat.toUpperCase());
   $("#count").textContent=list.length+(list.length===1?" jogo":" jogos");
   if(home) fill($("#newGrid"),GAMES.slice(0,7).map((g,i)=>({...g,badge:i<2?"TOP":"NOVO"})),true);
@@ -256,7 +299,12 @@ $("#q").addEventListener("input",e=>{term=e.target.value.trim();render()});
 $("#go").onclick=()=>$("#newSec").scrollIntoView({behavior:"smooth"});
 let tt; function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2600)}
 document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=()=>toast(b.dataset.msg));
+
+$("#more").onclick=loadMore;
+$("#pc").onclick=closeGame;
+$("#pfs").onclick=()=>{const f=$("#pf");(f.requestFullscreen||f.webkitRequestFullscreen||(()=>{})).call(f)};
 render();
+loadMore();
 </script>
 </body>
 </html>
