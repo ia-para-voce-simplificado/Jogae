@@ -137,12 +137,26 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   #player .bar-btns .btn{flex:1;margin:0!important;padding:11px 10px}
 }
 @media(max-height:500px){#player .game-frame h2{display:none}}
+.sug{position:absolute;top:100%;left:0;right:0;margin:6px 0 0;padding:6px;list-style:none;background:var(--panel);border:1px solid var(--violet);max-height:320px;overflow:auto;z-index:50;display:none}
+.sug.on{display:block}
+.sug li{display:flex;align-items:center;gap:10px;padding:8px;cursor:pointer;font-weight:700}
+.sug li:hover{background:#15112e}
+.sug img{width:40px;height:40px;object-fit:cover;border-radius:4px;flex:none}
+.sug small{display:block;color:var(--lime);font-size:12px}
+.sug .none{color:var(--muted);cursor:default}
+.sug li{position:relative;min-height:56px}
+.sug li span{position:static;display:block;flex:1;min-width:0;padding:0;background:none;font:700 14px/1.2 var(--body);color:var(--ink);white-space:normal;overflow-wrap:anywhere}
+.sug li small{position:static;display:block;margin-top:2px;font:600 12px var(--body);color:var(--lime)}
+.sug img{position:static;width:44px;height:44px;flex:none}
 </style>
 </head>
 <body>
 <header><div class="wrap bar">
   <a class="logo" href="#"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>JOGAE</a>
-  <label class="search"><span aria-hidden="true">⌕</span><input id="q" type="search" placeholder="Buscar jogos" aria-label="Buscar jogos"></label>
+  <div class="search"><span aria-hidden="true">⌕</span>
+  <input id="q" type="search" placeholder="Buscar jogos" aria-label="Buscar jogos" autocomplete="off">
+  <ul class="sug" id="sug" role="listbox"></ul>
+</div>
   <button class="btn login" data-msg="O login chega em breve!">ENTRAR</button>
 </div></header>
 
@@ -155,6 +169,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
       <p>Jogos online grátis para jogar direto no navegador, sem baixar nada. Escolha uma categoria e comece.</p>
       <div class="cta"><button class="btn" id="go">INICIAR MISSÃO</button><button class="btn alt" data-msg="Os mais jogados chegam em breve!">MAIS JOGADOS</button></div>
     </section>
+    <a
+  class="btn"
+  href="https://comilao-jogae.netlify.app/"
+  target="_blank"
+  rel="noopener noreferrer"
+  style="display:inline-block;margin:28px 0 36px;text-decoration:none">
+  COMILAO JOGAE
+    </a>
     <a
   class="btn"
   href="https://opengame.app/games/star-patrol/embed"
@@ -249,6 +271,27 @@ const MAP={action:"Ação",shoot:"Ação",fight:"Ação",adventure:"Aventura",ra
 const norm=c=>{const k=String(c||"").toLowerCase();for(const m in MAP)if(k.includes(m))return MAP[m];return "Ação"};
 const emoji=Object.fromEntries(CATS);
 let cat="Todos", term="", page=0, loading=false;
+const ALIAS={dama:"checkers",damas:"checkers",xadrez:"chess",corrida:"racing",carro:"car",moto:"bike",futebol:"soccer",tiro:"shoot",luta:"fight",cobra:"snake",bolha:"bubble",memoria:"memory",pintar:"color",cozinha:"cooking",vestir:"dress",fazenda:"farm",zumbi:"zombie",guerra:"war",quebra:"puzzle",basquete:"basket",ludo:"ludo",truco:"card",cartas:"card"};
+const fold=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+function matches(g,t){
+  const f=fold(t); if(!f)return true;
+  const title=fold(g.t);
+  const terms=[f,...Object.keys(ALIAS).filter(k=>k.startsWith(f)).map(k=>ALIAS[k])];
+  return terms.some(x=>title.includes(x));
+}
+function showSug(){
+  const ul=$("#sug");
+  if(!term||document.activeElement!==$("#q")){ul.classList.remove("on");return}
+  const m=GAMES.filter(g=>matches(g,term)).slice(0,6);
+  ul.innerHTML=m.length?"":'<li class="none">Nenhum jogo encontrado</li>';
+  m.forEach(g=>{
+    const li=document.createElement("li"); li.setAttribute("role","option");
+    li.innerHTML=(g.img?`<img src="${g.img}" alt="">`:"")+`<span>${g.t}<small>${g.c}</small></span>`;
+    li.onmousedown=e=>{e.preventDefault();ul.classList.remove("on");openGame(g)};
+    ul.appendChild(li);
+  });
+  ul.classList.add("on");
+}
 
 async function loadMore(){
   if(loading)return; loading=true; $("#more").textContent="CARREGANDO...";
@@ -279,14 +322,15 @@ function tile(g,big){
 }
 function fill(el,list,firstBig){el.innerHTML="";list.forEach((g,i)=>el.appendChild(tile(g,firstBig&&i===0)))}
 function render(){
-  const list=GAMES.filter(g=>(cat==="Todos"||g.c===cat)&&g.t.toLowerCase().includes(term.toLowerCase()));
+  const list=GAMES.filter(g=>(cat==="Todos"||g.c===cat)&&matches(g,term));
   const home=cat==="Todos"&&!term;
   $("#newSec").hidden=!home||!GAMES.length; $("#hero").hidden=!home;
   $("#allTitle").textContent=home?"TODOS OS JOGOS":(term?"RESULTADOS DA BUSCA":cat.toUpperCase());
   $("#count").textContent=list.length+(list.length===1?" jogo":" jogos");
   if(home) fill($("#newGrid"),GAMES.slice(0,7).map((g,i)=>({...g,badge:i<2?"TOP":"NOVO"})),true);
   if(list.length) fill($("#grid"),list,false);
-  else $("#grid").innerHTML='<p class="empty">Nenhum jogo encontrado. Tente outra busca ou categoria.</p>';
+    else $("#grid").innerHTML='<p class="empty">Nenhum jogo encontrado. Tente outra busca ou categoria.</p>';
+  showSug();
 }
 const catsEl=$("#cats");
 [["Todos","🎮"],...CATS].forEach(([n,e])=>{
@@ -295,7 +339,13 @@ const catsEl=$("#cats");
   b.onclick=()=>{cat=n;[...catsEl.children].forEach(c=>c.setAttribute("aria-pressed",c===b));render()};
   catsEl.appendChild(b);
 });
-$("#q").addEventListener("input",e=>{term=e.target.value.trim();render()});
+$("#q").addEventListener("input",e=>{
+  term=e.target.value.trim(); render();
+  if(term&&!GAMES.some(g=>matches(g,term))&&page<8&&!loading) loadMore();
+});
+$("#q").addEventListener("focus",showSug);
+$("#q").addEventListener("blur",()=>$("#sug").classList.remove("on"));
+$("#q").addEventListener("keydown",e=>{if(e.key==="Enter"){$("#sug").classList.remove("on");$("#q").blur()}});
 $("#go").onclick=()=>$("#newSec").scrollIntoView({behavior:"smooth"});
 let tt; function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2600)}
 document.querySelectorAll("[data-msg]").forEach(b=>b.onclick=()=>toast(b.dataset.msg));
